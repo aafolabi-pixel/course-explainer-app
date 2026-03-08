@@ -1,27 +1,17 @@
-import sys
+import subprocess
 import os
 
-# Try using winsound (built-in on Windows, no installation needed)
+sound_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sounds', 'notification.mp3')
+
 try:
-    import winsound
-    sound_path = os.path.join(os.path.dirname(__file__), 'sounds', 'notification.mp3')
-
-    # winsound only works with WAV files, so we'll use an alternative
-    # Use Windows API to play sound without visible player
-    import subprocess
-
-    # This PowerShell command plays sound without opening Windows Media Player window
-    ps_command = f'''
-    Add-Type -AssemblyName presentationCore
-    $mediaPlayer = New-Object System.Windows.Media.MediaPlayer
-    $mediaPlayer.Open([uri]::new("{sound_path}"))
-    $mediaPlayer.Play()
-    Start-Sleep -Milliseconds 1500
-    $mediaPlayer.Close()
-    '''
-
-    subprocess.run(['powershell', '-WindowStyle', 'Hidden', '-Command', ps_command],
-                   creationflags=subprocess.CREATE_NO_WINDOW)
-except Exception as e:
-    # Silently fail if there's an issue
+    # macOS
+    subprocess.run(['afplay', sound_path], check=True)
+except FileNotFoundError:
+    try:
+        # Windows fallback
+        import ctypes
+        ctypes.windll.winmm.PlaySoundW(sound_path, None, 0x00020001)
+    except Exception:
+        pass
+except Exception:
     pass
